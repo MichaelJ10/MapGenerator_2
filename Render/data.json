@@ -1,0 +1,42 @@
+{
+    "x": -1997847,
+    "y": -2000208,
+    "scale": 3.0,
+    "zoom": -0.275833,
+    "seed": 5817820451664102427,
+    "renderSteps": [
+        {
+            "fullDefinition": false,
+            "physical": true,
+            "shadow": false,
+            "topography": false,
+            "topologySize": 1.1,
+            "topologySteps": 15,
+            "targetScale": 0.10000000149011612,
+            "oceanLevel": 0.5,
+            "oceanBlend": 0.009999999776482582
+        },
+        {
+            "fullDefinition": false,
+            "physical": true,
+            "shadow": false,
+            "topography": false,
+            "topologySize": 1.0,
+            "topologySteps": 15,
+            "targetScale": 0.5,
+            "oceanLevel": 0.5,
+            "oceanBlend": 0.0
+        },
+        {
+            "fullDefinition": true,
+            "physical": true,
+            "shadow": true,
+            "topography": false,
+            "topologySize": 2.5,
+            "topologySteps": 10,
+            "targetScale": 1.0,
+            "oceanLevel": 0.5,
+            "oceanBlend": 0.0
+        }
+    ]
+}

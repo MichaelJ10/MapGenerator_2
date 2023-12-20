@@ -6,10 +6,17 @@
     "configurations": [
         {
             "type": "java",
-            "name": "MapGeneratorDriver",
+            "name": "Map Generator",
             "request": "launch",
             "mainClass": "MapGeneratorDriver",
-            "projectName": "MapGenerator_2_ea3cbb1c"
+            "vmArgs": "-Xmx2g"
+        },
+        {
+            "type": "java",
+            "name": "STL",
+            "request": "launch",
+            "mainClass": "STL",
+            "projectName": "MapGenerator_2_f13e0a2"
         }
     ]
 }

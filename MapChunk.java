@@ -18,12 +18,12 @@ class MapChunk {
         resetImg();
     }
 
-    public void render(MapGenerator.Settings settings, float scale) {
-        settings = (MapGenerator.Settings) settings.clone();
-        settings.scale = setScale(scale);
+    public void render(MapGenerator generator, float scale) {
+        generator = (MapGenerator) generator.clone();
+        generator.scale = setScale(scale);
         resetImg();
-        settings.setLocation(x, y, width, height, this.scale, seed);
-        MapGenerator.getCombinedMap(img, settings);
+        generator.setLocation(x, y, width, height, this.scale, seed);
+        generator.getCombinedMap(img);
     }
 
     public void resetImg() {

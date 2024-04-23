@@ -1,0 +1,28 @@
+<!DOCTYPE FilterScript>
+<FilterScript>
+ <filter name="Close Holes">
+  <Param name="MaxHoleSize" type="RichInt" description="Max size to be closed " value="10000" tooltip="The size is expressed as number of edges composing the hole boundary"/>
+  <Param name="Selected" type="RichBool" description="Close holes with selected faces" value="false" tooltip="Only the holes with at least one of the boundary faces selected are closed"/>
+  <Param name="NewFaceSelected" type="RichBool" description="Select the newly created faces" value="false" tooltip="After closing a hole the faces that have been created are left selected. Any previous selection is lost. Useful for example for smoothing the newly created holes."/>
+  <Param name="SelfIntersection" type="RichBool" description="Prevent creation of selfIntersecting faces" value="false" tooltip="When closing an holes it tries to prevent the creation of faces that intersect faces adjacent to the boundary of the hole. It is an heuristic, non intersetcting hole filling can be NP-complete."/>
+  <Param name="RefineHole" type="RichBool" description="Refine Filled Hole" value="false" tooltip="After closing the hole it will refine the newly created triangles to make the surface more smooth and the triangulation more evenly spaced"/>
+  <Param name="RefineHoleEdgeLen" max="66.2932" min="0" type="RichAbsPerc" description="Hole Refinement Edge Len" value="132.586" tooltip="The target edge lenght of the triangulation inside the filled hole."/>
+ </filter>
+ <filter name="Select Faces with edges longer than...">
+  <Param name="Threshold" max="33.1466" min="0" type="RichDynamicFloat" description="Edge Threshold" value="1" tooltip="All the faces with an edge &lt;b>longer&lt;/b> than this threshold will be deleted. Useful for removing long skinny faces obtained by bad triangulation of range maps."/>
+ </filter>
+ <filter name="Invert Selection">
+  <Param name="InvFaces" type="RichBool" description="Invert Faces" value="true" tooltip="If true the filter will invert the set of selected faces."/>
+  <Param name="InvVerts" type="RichBool" description="Invert Vertices" value="false" tooltip="If true the filter will invert the set of selected vertices."/>
+ </filter>
+ <filter name="Laplacian Smooth">
+  <Param name="stepSmoothNum" type="RichInt" description="Smoothing steps" value="3" tooltip="The number of times that the whole algorithm (normal smoothing + vertex fitting) is iterated."/>
+  <Param name="Boundary" type="RichBool" description="1D Boundary Smoothing" value="true" tooltip="Smooth boundary edges only by themselves (e.g. the polyline forming the boundary of the mesh is independently smoothed). This can reduce the shrinking on the border but can have strange effects on very small boundaries."/>
+  <Param name="cotangentWeight" type="RichBool" description="Cotangent weighting" value="true" tooltip="Use cotangent weighting scheme for the averaging of the position. Otherwise the simpler umbrella scheme (1 if the edge is present) is used."/>
+  <Param name="Selected" type="RichBool" description="Affect only selection" value="true" tooltip="If checked the filter is performed only on the selected area"/>
+ </filter>
+ <filter name="Select None">
+  <Param name="allFaces" type="RichBool" description="De-select all Faces" value="true" tooltip="If true the filter will de-select all the faces."/>
+  <Param name="allVerts" type="RichBool" description="De-select all Vertices" value="true" tooltip="If true the filter will de-select all the vertices."/>
+ </filter>
+</FilterScript>

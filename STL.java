@@ -1,7 +1,12 @@
+import java.awt.geom.IllegalPathStateException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 public class STL {
     public static void main(String[] args) {
@@ -18,22 +23,69 @@ public class STL {
         byte[] header = new byte[84];
         Arrays.fill(header, (byte) ' ');
 
-        byte[] numfaces = getBytes(faces.size());
-        for (int i = 0; i < numfaces.length; i++)
-            header[i + 80] = numfaces[i];
+        byte[] numFaces = getBytes(faces.size());
+        for (int i = 0; i < numFaces.length; i++)
+            header[i + 80] = numFaces[i];
 
         return header;
     }
 
     public byte[] getBytes() {
-        ArrayList<Byte> bytes = new ArrayList<>();
-        for (Face face : faces) {
-            byte[] faceBytes = face.getBytes();
-            for (byte faceByte : faceBytes) {
-                bytes.add(faceByte);
+        int numThreads = Runtime.getRuntime().availableProcessors();
+        int numFaces = faces.size();
+        int minFacesPerThread = numFaces / numThreads;
+        int extraFaces = numFaces % numThreads;
+        Face[][] facets = new Face[numThreads][0];
+        byte[][][] bytes = new byte[numThreads][0][0];
+        int pos = 0;
+        System.out.println("num threads: " + numThreads);
+        AtomicInteger count = new AtomicInteger(numFaces);
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
+        for(int i = 0; i < numThreads; i++) {
+            int currentNum = minFacesPerThread;
+            if(extraFaces > 0) {
+                currentNum++;
+                extraFaces--;
+            }
+            bytes[i] = new byte[currentNum][0];
+            facets[i] = faces.subList(pos, pos + currentNum).toArray(new Face[] {});
+            if(bytes[i].length != facets[i].length) throw new IllegalPathStateException();
+            pos += currentNum;
+            final int index = i;
+            executor.submit(() -> {
+                for(int k = 0; k < facets[index].length; k++) {
+                    bytes[index][k] = facets[index][k].getBytes();
+                    facets[index][k] = null;
+                    count.decrementAndGet();
+                }
+                facets[index] = null;
+            });
+        }
+        executor.shutdown();
+        while(!executor.isTerminated()) {
+            System.out.print(count.get() + ", " + convertBytes(Runtime.getRuntime().freeMemory()) + "      \r");
+            try {
+                Thread.sleep(40);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
-        return mergeBytes(getHeader(), getBytes(bytes.toArray(new Byte[] {})));
+        System.out.println("compiling bytes");
+        byte[] flattenedBytes = mergeBytes(bytes);
+        return mergeBytes(getHeader(), flattenedBytes);
+    }
+
+    public static String convertBytes(long bytes) {
+        String[] suffixes = new String[]{"Bytes", "KB", "MB", "GB", "TB"};
+        int suffixIndex = 0;
+        double value = bytes;
+
+        while (value >= 1024 && suffixIndex < suffixes.length - 1) {
+            value /= 1024;
+            suffixIndex++;
+        }
+
+        return String.format("%.2f %s", value, suffixes[suffixIndex]);
     }
 
     private static byte[] getBytes(int num) {
@@ -44,25 +96,46 @@ public class STL {
         return ByteBuffer.allocate(Float.BYTES).order(ByteOrder.LITTLE_ENDIAN).putFloat(num).array();
     }
 
-    private static byte[] getBytes(Byte[] vals) {
+    private static byte[] getBytes(int[] vals) {
         byte[] bytes = new byte[vals.length];
-        for (int i = 0; i < vals.length; i++)
-            try {
-                bytes[i] = (byte) vals[i];
-            } catch (NullPointerException e) {
-                bytes[i] = 0;
-            }
+        for(int i = 0; i < vals.length; i++) 
+            bytes[i] = (byte) vals[i];
         return bytes;
     }
 
-    private static byte[] mergeBytes(byte[]... vals) {
-        ArrayList<Byte> bytes = new ArrayList<>();
-        for (byte[] valsBytes : vals) {
-            for (byte valsByte : valsBytes) {
-                bytes.add(valsByte);
+    private static byte[] mergeBytes(byte[][]... bytes) {
+        int length = 0;
+        for(int i = 0; i < bytes.length; i++) {
+            for(int j = 0; j < bytes[i].length; j++) {
+                length += bytes[i][j].length;
             }
         }
-        return getBytes(bytes.toArray(new Byte[] {}));
+        byte[] flattenedBytes = new byte[length];
+        int pos = 0;
+        for(int i = 0; i < bytes.length; i++) {
+            byte[] newBytes = mergeBytes(bytes[i]);
+            for(int j = 0; j < newBytes.length; j++) {
+                flattenedBytes[pos] = newBytes[j];
+                pos++;
+            }
+        }
+        return flattenedBytes;
+    }
+
+    private static byte[] mergeBytes(byte[]... bytes) {
+        int length = 0;
+        for(int i = 0; i < bytes.length; i++) {
+            length += bytes[i].length;
+        }
+        byte[] flattenedBytes = new byte[length];
+        int pos = 0;
+        for(int i = 0; i < bytes.length; i++) {
+            for(int j = 0; j < bytes[i].length; j++) {
+                flattenedBytes[pos] = bytes[i][j];
+                pos++;
+            }
+        }
+        return flattenedBytes;
     }
 
     public static class Face {
@@ -87,19 +160,7 @@ public class STL {
         }
 
         public byte[] getBytes() {
-            ArrayList<Byte> bytes = new ArrayList<>();
-            byte[] normalBytes = calculateNormalVector().getBytes();
-            for (byte normalByte : normalBytes) {
-                bytes.add(normalByte);
-            }
-            for (Point verticy : vertices) {
-                byte[] verticyBytes = verticy.getBytes();
-                for (byte verticyByte : verticyBytes) {
-                    bytes.add(verticyByte);
-                }
-            }
-            bytes.addAll(Arrays.asList(new Byte[2]));
-            return STL.getBytes(bytes.toArray(new Byte[] {}));
+            return STL.mergeBytes(calculateNormalVector().getBytes(), STL.getBytes(Arrays.stream(vertices).map(vertex -> vertex.getBytes()).flatMapToInt(nums -> IntStream.range(0, nums.length).map(i -> nums[i])).toArray()), new byte[2]);
         }
 
         private Point calculateNormalVector() {

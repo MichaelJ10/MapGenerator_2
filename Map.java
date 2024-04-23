@@ -38,7 +38,7 @@ public class Map extends Canvas2D {
     boolean[][] isRendered;
     ArrayList<ActionListener> renderedActions = new ArrayList<>();
     ArrayList<ActionListener> renderingActions = new ArrayList<>();
-    ArrayList<MapGenerator.Settings> renderStep = new ArrayList<>();
+    ArrayList<MapGenerator> renderStep = new ArrayList<>();
 
     public void getData(JSON.Object data) {
         this.renderStep = new ArrayList<>();
@@ -49,7 +49,7 @@ public class Map extends Canvas2D {
         this.zoom = (float) ((JSON.Value.Float) data.getItem("zoom")).getFloat();
         for (JSON renderStep : ((JSON.Array) data.getItem("renderSteps"))) {
             JSON.Object renderObj = (JSON.Object) renderStep;
-            boolean fullDefinition = ((JSON.Value.Boolean) renderObj.getItem("fullDefinition")).getBoolean();
+            // boolean fullDefinition = ((JSON.Value.Boolean) renderObj.getItem("fullDefinition")).getBoolean();
             boolean physical = ((JSON.Value.Boolean) renderObj.getItem("physical")).getBoolean();
             boolean shadow = ((JSON.Value.Boolean) renderObj.getItem("shadow")).getBoolean();
             boolean topography = ((JSON.Value.Boolean) renderObj.getItem("topography")).getBoolean();
@@ -58,11 +58,11 @@ public class Map extends Canvas2D {
             float targetScale = (float) ((JSON.Value.Float) renderObj.getItem("targetScale")).getFloat();
             float oceanLevel = (float) ((JSON.Value.Float) renderObj.getItem("oceanLevel")).getFloat();
             float oceanBlend = (float) ((JSON.Value.Float) renderObj.getItem("oceanBlend")).getFloat();
-            if (fullDefinition) {
-                this.renderStep.add(new MapGenerator.Settings(shadow, topography, physical, oceanLevel, oceanBlend, topologySteps, topologySize));
-            } else {
-                this.renderStep.add(new MapGenerator.Settings(shadow, topography, physical, targetScale, oceanLevel, oceanBlend, topologySteps, topologySize));
-            }
+            // if (fullDefinition) {
+            //     this.renderStep.add(new MapGenerator(shadow, topography, physical, oceanLevel, oceanBlend, topologySteps, topologySize));
+            // } else {
+                this.renderStep.add(new MapGenerator(shadow, topography, physical, targetScale, oceanLevel, oceanBlend, topologySteps, topologySize));
+            // }
         }
     }
 
@@ -74,17 +74,17 @@ public class Map extends Canvas2D {
         data.add(new JSON.Object.Value("zoom", new JSON.Value.Float(zoom)));
         data.add(new JSON.Object.Value("seed", new JSON.Value.Integer(MapChunk.getSeed())));
         JSON.Array stepsData = new JSON.Array();
-        for (MapGenerator.Settings settings : renderStep) {
+        for (MapGenerator generator : renderStep) {
             JSON.Object stepData = new JSON.Object();
-            stepData.add(new JSON.Object.Value("fullDefinition", new JSON.Value.Boolean(settings.fullDefinition)));
-            stepData.add(new JSON.Object.Value("physical", new JSON.Value.Boolean(settings.physical)));
-            stepData.add(new JSON.Object.Value("shadow", new JSON.Value.Boolean(settings.shadow)));
-            stepData.add(new JSON.Object.Value("topography", new JSON.Value.Boolean(settings.topography)));
-            stepData.add(new JSON.Object.Value("topologySize", new JSON.Value.Float(settings.topologySize)));
-            stepData.add(new JSON.Object.Value("topologySteps", new JSON.Value.Integer(settings.topologySteps)));
-            stepData.add(new JSON.Object.Value("targetScale", new JSON.Value.Float(settings.targetScale)));
-            stepData.add(new JSON.Object.Value("oceanLevel", new JSON.Value.Float(settings.oceanLevel)));
-            stepData.add(new JSON.Object.Value("oceanBlend", new JSON.Value.Float(settings.oceanBlend)));
+            stepData.add(new JSON.Object.Value("fullDefinition", new JSON.Value.Boolean(generator.fullDefinition)));
+            stepData.add(new JSON.Object.Value("physical", new JSON.Value.Boolean(generator.physical)));
+            stepData.add(new JSON.Object.Value("shadow", new JSON.Value.Boolean(generator.shadow)));
+            stepData.add(new JSON.Object.Value("topography", new JSON.Value.Boolean(generator.topography)));
+            stepData.add(new JSON.Object.Value("topologySize", new JSON.Value.Float(generator.topologySize)));
+            stepData.add(new JSON.Object.Value("topologySteps", new JSON.Value.Integer(generator.topologySteps)));
+            stepData.add(new JSON.Object.Value("targetScale", new JSON.Value.Float(generator.targetScale)));
+            stepData.add(new JSON.Object.Value("oceanLevel", new JSON.Value.Float(generator.oceanLevel)));
+            stepData.add(new JSON.Object.Value("oceanBlend", new JSON.Value.Float(generator.oceanBlend)));
             stepsData.add(stepData);
         }
         data.add(new JSON.Object.Value("renderSteps", stepsData));
@@ -108,9 +108,9 @@ public class Map extends Canvas2D {
         MapChunk.setSize(CHUNK_WIDTH, CHUNK_HEIGHT);
         MapChunk.setSeed(0);
 
-        renderStep.add(new MapGenerator.Settings(false, false, true, 0.01f));
-        renderStep.add(new MapGenerator.Settings(true, false, true, 1f));
-        renderStep.add(new MapGenerator.Settings(true, false, true));
+        renderStep.add(new MapGenerator(true, false, true, 0.01f));
+        renderStep.add(new MapGenerator(true, false, true, 1f));
+        renderStep.add(new MapGenerator(true, false, true));
 
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -192,10 +192,10 @@ public class Map extends Canvas2D {
                 int last = renderStep.size() - 1;
                 loop: for (int k = renderStepCt; k <= last && ct <= 0; k++) {
                     long start = System.currentTimeMillis();
-                    MapGenerator.Settings settings = renderStep.get(k);
+                    MapGenerator generator = renderStep.get(k);
                     float scale = ((getHeight() * Map.this.scale) / widthY) / chunkHeight;
-                    scale *= settings.targetScale;
-                    settings.scale = scale;
+                    scale *= generator.targetScale;
+                    generator.scale = scale;
                     if (ct > 0)
                         break;
                     step: if (k == 0) {
@@ -209,7 +209,7 @@ public class Map extends Canvas2D {
                                     continue;
                                 if (!MapChunk.hasChunk(chunks, posX, posY)) {
                                     MapChunk chunk = new MapChunk(posX, posY);
-                                    chunk.render(settings, scale);
+                                    chunk.render(generator, scale);
                                     chunk.setRendered(k);
                                     chunks.add(chunk);
                                     ct++;
@@ -228,7 +228,7 @@ public class Map extends Canvas2D {
                                 break loop;
                             obj.setTitle("Map Generator: (" + (chunks.indexOf(chunk)) + " / " + (chunks.size()) + ")");
                             if (chunk.getRendered() < k) {
-                                chunk.render(settings, scale);
+                                chunk.render(generator, scale);
                                 chunk.setRendered(k);
                                 ct++;
                                 obj.setTitle("Map Generator: (" + (chunks.indexOf(chunk) + 1) + " / " + (chunks.size()) + ")");

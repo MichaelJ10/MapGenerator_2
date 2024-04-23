@@ -6,17 +6,17 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Map Generator",
+            "name": "PerlinMap",
             "request": "launch",
-            "mainClass": "MapGeneratorDriver",
-            "vmArgs": "-Xmx2g"
+            "mainClass": "PerlinMap",
+            "projectName": "MapGenerator_2_ea3cbb1c"
         },
         {
             "type": "java",
-            "name": "STL",
+            "name": "Map Generator",
             "request": "launch",
-            "mainClass": "STL",
-            "projectName": "MapGenerator_2_f13e0a2"
+            "mainClass": "MapGeneratorDriver",
+            "vmArgs": "-Xmx24g"
         }
     ]
 }

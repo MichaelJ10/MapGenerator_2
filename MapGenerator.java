@@ -5,63 +5,62 @@ import java.text.DecimalFormat;
 import java.util.Random;
 
 public class MapGenerator {
+    int x = 0;
+    int y = 0;
+    int width = 0;
+    int height = 0;
+    int renderWidth = 0;
+    int renderHeight = 0;
+    long seed = 0;
+    boolean fullDefinition = false;
+    boolean shadow = SHADOW;
+    boolean topography = TOPOGRAPHY;
+    boolean physical = PHYSICAL;
+    float targetScale = SCALE;
+    float scale = SCALE;
+    float oceanLevel = OCEAN_LEVEL;
+    float oceanBlend = OCEAN_BLEND;
+    float topologySize = TOPOLOGY_SIZE;
+    int topologySteps = TOPOLOGY_STEPS;
 
-    public static class Settings {
-        int x = 0;
-        int y = 0;
-        int width = 0;
-        int height = 0;
-        int renderWidth = 0;
-        int renderHeight = 0;
-        long seed = 0;
-        boolean fullDefinition = false;
-        boolean shadow = SHADOW;
-        boolean topography = TOPOGRAPHY;
-        boolean physical = PHYSICAL;
-        float targetScale = SCALE;
-        float scale = SCALE;
-        float oceanLevel = OCEAN_LEVEL;
-        float oceanBlend = OCEAN_BLEND;
-        float topologySize = TOPOLOGY_SIZE;
-        int topologySteps = TOPOLOGY_STEPS;
 
-        public Settings(Integer x, Integer y, Integer width, Integer height, Long seed, Boolean shadow, Boolean topography, Boolean physical, Float targetScale, Float oceanLevel, Float oceanBlend, Integer topologySteps, Float topologySize) {
+        public MapGenerator(Integer x, Integer y, Integer width, Integer height, Long seed, Boolean shadow, Boolean topography, Boolean physical, Float targetScale, Float oceanLevel, Float oceanBlend, Integer topologySteps, Float topologySize) {
             setLocation(x, y, width, height, targetScale, seed);
             setSettings(shadow, topography, physical, targetScale, oceanLevel, oceanBlend, topologySteps, topologySize);
             fullDefinition = false;
         }
 
-        public Settings(Boolean shadow, Boolean topography, Boolean physical, Float targetScale, Float oceanLevel, Float oceanBlend, Integer topologySteps, Float topologySize) {
+        public MapGenerator(Boolean shadow, Boolean topography, Boolean physical, Float targetScale, Float oceanLevel, Float oceanBlend, Integer topologySteps, Float topologySize) {
             setSettings(shadow, topography, physical, targetScale, oceanLevel, oceanBlend, topologySteps, topologySize);
             fullDefinition = false;
         }
 
-        public Settings(Boolean shadow, Boolean topography, Boolean physical, Float targetScale) {
+        public MapGenerator(Boolean shadow, Boolean topography, Boolean physical, Float targetScale) {
             setSettings(shadow, topography, physical, targetScale, null, null, null, null);
             fullDefinition = false;
         }
 
-        public Settings(Integer x, Integer y, Integer width, Integer height, Long seed, Boolean shadow, Boolean topography, Boolean physical, Float oceanLevel, Float oceanBlend, Integer topologySteps, Float topologySize) {
+        public MapGenerator(Integer x, Integer y, Integer width, Integer height, Long seed, Boolean shadow, Boolean topography, Boolean physical, Float oceanLevel, Float oceanBlend, Integer topologySteps, Float topologySize) {
             setLocation(x, y, width, height, targetScale, seed);
             setSettings(shadow, topography, physical, targetScale, oceanLevel, oceanBlend, topologySteps, topologySize);
             fullDefinition = true;
         }
 
-        public Settings(Boolean shadow, Boolean topography, Boolean physical, Float oceanLevel, Float oceanBlend, Integer topologySteps, Float topologySize) {
+        public MapGenerator(Boolean shadow, Boolean topography, Boolean physical, Float oceanLevel, Float oceanBlend, Integer topologySteps, Float topologySize) {
             setSettings(shadow, topography, physical, null, oceanLevel, oceanBlend, topologySteps, topologySize);
             fullDefinition = true;
         }
 
-        public Settings(Boolean shadow, Boolean topography, Boolean physical) {
+        public MapGenerator(Boolean shadow, Boolean topography, Boolean physical) {
             setSettings(shadow, topography, physical, null, null, null, null, null);
             fullDefinition = true;
         }
 
-        public Settings(Integer x, Integer y, Integer width, Integer height, Long seed) {
+        public MapGenerator(Integer x, Integer y, Integer width, Integer height, Long seed) {
             setLocation(x, y, width, height, targetScale, seed);
         }
 
-        public Settings() {
+        public MapGenerator() {
 
         }
 
@@ -96,9 +95,8 @@ public class MapGenerator {
 
         @Override
         public Object clone() {
-            return new MapGenerator.Settings(x, y, width, height, seed, shadow, topography, physical, targetScale, oceanLevel, oceanBlend, topologySteps, topologySize);
+            return new MapGenerator(x, y, width, height, seed, shadow, topography, physical, targetScale, oceanLevel, oceanBlend, topologySteps, topologySize);
         }
-    }
 
     // adjustable variables
     static final DecimalFormat DF = new DecimalFormat("0.000000000");
@@ -122,7 +120,7 @@ public class MapGenerator {
     static float minShadow = 0;
 
     // DO NOT ADJUST
-    static final float CLIMATE_SEPERATION = 2f, COLOR_BLEND = 1f;
+    static final float CLIMATE_SEPARATION = 2f, COLOR_BLEND = 1f;
     static final float LEVEL_DEEP = 0.1f, LEVEL_OCEAN = 0.3f, LEVEL_COAST = 0.45f, LEVEL_LAND = 0.7f, LEVEL_MOUNTAIN = 0.9f;
 
     static final float MIN_X = 0;
@@ -133,49 +131,49 @@ public class MapGenerator {
     static final float CEN_Y = 0.5f;
     static float max = Float.NEGATIVE_INFINITY;
 
-    public static void getCombinedMap(BufferedImage img, Settings settings) {
+    public void getCombinedMap(BufferedImage img) {
         Graphics2D CTX = (Graphics2D) img.getGraphics();
-        BufferedImage newImg = getCombinedMap(settings);
+        BufferedImage newImg = getCombinedMap();
         CTX.drawImage(newImg, 0, 0, img.getWidth(), img.getHeight(), null);
     }
 
     /**
-     * This is the primary methed of the map generato class this generates the sub maps shadows and compiles then into one image
+     * This is the primary method of the map generator class this generates the sub maps shadows and compiles then into one image
      * 
      * @return A BufferedImage containing the generated map
      */
-    public static BufferedImage getCombinedMap(Settings settings) {
-        if(settings.renderWidth <= 0 || settings.renderHeight <= 0)
+    public BufferedImage getCombinedMap() {
+        if (renderWidth <= 0 || renderHeight <= 0)
             return null;
-        if (settings.seed == 0) {
-            settings.seed = new Random().nextLong();
-            System.out.println(settings.seed);
+        if (seed == 0) {
+            seed = new Random().nextLong();
+            System.out.println(seed);
         }
 
-        float[][] heightMap = getMap(settings, 0);
+        float[][] heightMap = getMap(0, 0);
         float[][] tempMap = new float[0][0];
         float[][] humidityMap = new float[0][0];
         int[][] topologyStepMap = new int[0][0];
-        if (settings.physical) {
-            tempMap = getMap(settings, 1);
-            humidityMap = getMap(settings, 2);
+        if (physical) {
+            tempMap = getMap(1);
+            humidityMap = getMap(2);
         } else {
-            topologyStepMap = getTopologyStep(heightMap, settings);
+            topologyStepMap = getTopologyStep(heightMap);
         }
 
         boolean[][] topologyMap = new boolean[0][0];
-        if (settings.topography) {
-            topologyMap = getTopologyMap(settings);
+        if (topography) {
+            topologyMap = getTopologyMap();
         }
 
         Color[][] oceanFull = new Color[0][0];
         Color[][] land = new Color[0][0];
-        if (settings.physical) {
-            oceanFull = getOcean(settings, tempMap, humidityMap, heightMap);
-            land = getLandMap(settings, tempMap, humidityMap, heightMap);
+        if (physical) {
+            oceanFull = getOcean(tempMap, humidityMap, heightMap);
+            land = getLandMap(tempMap, humidityMap, heightMap);
         }
 
-        Color[][] finalMap = getFinalMap(oceanFull, land, heightMap, topologyMap, topologyStepMap, settings);
+        Color[][] finalMap = getFinalMap(oceanFull, land, heightMap, topologyMap, topologyStepMap);
         return getImage(finalMap);
     }
 
@@ -189,18 +187,18 @@ public class MapGenerator {
         return buffer;
     }
 
-    public static boolean[][] getTopologyMap(Settings settings) {
-        float topologySizeF = Math.max(settings.topologySize * settings.scale, 0);
+    public boolean[][] getTopologyMap() {
+        float topologySizeF = Math.max(topologySize * scale, 0);
         int topologySize = (int) Math.ceil(topologySizeF);
-        float realSize = Math.max(settings.topologySize, 0);
-        float[][] heightMap = PerlinMap.generateMap(settings.x - realSize, settings.y - realSize, settings.width + (2 * realSize), settings.height + (2 * realSize), settings.renderWidth + (2 * topologySize), settings.renderHeight + (2 * topologySize), getKey(settings.seed, 0));
-        int[][] levelHeight = getTopologyStep(heightMap, settings);
-        boolean[][] topologyMap = new boolean[settings.renderWidth][settings.renderHeight];
-        if (settings.topography)
-            for (int x = topologySize; x < settings.renderWidth + topologySize; x++) {
-                for (int y = topologySize; y < settings.renderHeight + topologySize; y++) {
+        float realSize = Math.max(topologySize, 0);
+        float[][] heightMap = PerlinMap.generateMap(x - realSize, y - realSize, width + (2 * realSize), height + (2 * realSize), renderWidth + (2 * topologySize), renderHeight + (2 * topologySize), getKey(0));
+        int[][] levelHeight = getTopologyStep(heightMap);
+        boolean[][] topologyMap = new boolean[renderWidth][renderHeight];
+        if (topography)
+            for (int x = topologySize; x < renderWidth + topologySize; x++) {
+                for (int y = topologySize; y < renderHeight + topologySize; y++) {
                     int start = levelHeight[x][y];
-                    boolean onLine = (heightMap[x][y] > settings.oceanLevel && heightMap[x][y] < settings.oceanLevel + settings.oceanBlend);
+                    boolean onLine = (heightMap[x][y] > oceanLevel && heightMap[x][y] < oceanLevel + oceanBlend);
                     for (int k = -topologySize; k <= topologySize; k++) {
                         for (int l = -topologySize; l <= topologySize; l++) {
                             if (distance(0, 0, 0, k, l, 0) <= topologySizeF) {
@@ -215,25 +213,25 @@ public class MapGenerator {
         return topologyMap;
     }
 
-    public static int[][] getTopologyStep(float[][] heightMap, Settings settings) {
+    public int[][] getTopologyStep(float[][] heightMap) {
         int[][] topologyStepMap = new int[heightMap.length][heightMap[0].length];
         for (int x = 0; x < heightMap.length; x++) {
             for (int y = 0; y < heightMap[0].length; y++) {
-                topologyStepMap[x][y] = (int) Math.max(Math.ceil(settings.topologySteps * ((heightMap[x][y] - settings.oceanLevel) / (1 - settings.oceanLevel))), 0);
+                topologyStepMap[x][y] = (int) Math.max(Math.ceil(topologySteps * ((heightMap[x][y] - oceanLevel) / (1 - oceanLevel))), 0);
             }
         }
         return topologyStepMap;
     }
 
-    public static Color[][] getFinalMap(Color[][] oceanMap, Color[][] landMap, float[][] heightMap, boolean[][] topologyMap, int[][] topologyStepMap, Settings settings) {
-        Color[][] finalMap = new Color[settings.renderWidth][settings.renderHeight];
+    public Color[][] getFinalMap(Color[][] oceanMap, Color[][] landMap, float[][] heightMap, boolean[][] topologyMap, int[][] topologyStepMap) {
+        Color[][] finalMap = new Color[renderWidth][renderHeight];
         for (int x = 0; x < finalMap.length; x++) {
             for (int y = 0; y < finalMap[0].length; y++) {
-                if (settings.physical)
-                    finalMap[x][y] = blendColor(oceanMap[x][y], landMap[x][y], ((settings.oceanLevel - heightMap[x][y]) / settings.oceanBlend) + 1);
+                if (physical)
+                    finalMap[x][y] = blendColor(oceanMap[x][y], landMap[x][y], ((oceanLevel - heightMap[x][y]) / oceanBlend) + 1);
                 else
-                    finalMap[x][y] = Color.getHSBColor(mapL(topologyStepMap[x][y], 0, settings.topologySteps, 0, 1), 1, 1);
-                if (settings.topography && topologyMap[x][y])
+                    finalMap[x][y] = Color.getHSBColor(mapL(topologyStepMap[x][y], 0, topologySteps, 0, 1), 1, 1);
+                if (topography && topologyMap[x][y])
                     finalMap[x][y] = Color.BLACK;
             }
         }
@@ -244,13 +242,17 @@ public class MapGenerator {
      * Generates the sub-maps by indexing the key used to render the map
      * 
      * @param key the index (0 - 2) of what map you are using
-     * @return a 2d float array contining the height of the sub-map
+     * @return a 2d float array containing the height of the sub-map
      */
-    public static float[][] getMap(Settings settings, int key) {
-        return PerlinMap.generateMap(settings.x, settings.y, settings.width, settings.height, settings.renderWidth, settings.renderHeight, getKey(settings.seed, key));
+    public float[][] getMap(int key) {
+        return getMap(key, 0);
     }
 
-    public static long getKey(long seed, int num) {
+    public float[][] getMap(int key, float mapValue) {
+        return PerlinMap.generateMap(x, y, width, height, renderWidth, renderHeight, mapValue, getKey(key));
+    }
+
+    public long getKey(int num) {
         Random rand = new Random(seed);
         for (int x = 1; x < num; x++)
             rand.nextLong();
@@ -260,16 +262,16 @@ public class MapGenerator {
     /**
      * Generates the Ocean colors by combining the different colors of ocean that are used for this map
      * 
-     * @return a 2d Color array containg the ocean data
+     * @return a 2d Color array containing the ocean data
      */
-    public static Color[][] getOcean(Settings settings, float[][] tempMap, float[][] humidityMap, float[][] heightMap) {
+    public Color[][] getOcean(float[][] tempMap, float[][] humidityMap, float[][] heightMap) {
         final ColorPoint[] COLORS = { new ColorPoint("#281e5d", MIN_X, MIN_Y, LEVEL_DEEP), new ColorPoint("#ffffff", MIN_X, MAX_Y, LEVEL_DEEP), new ColorPoint("#0a1172", MAX_X, MIN_Y, LEVEL_DEEP), new ColorPoint("#016064", MAX_X, MAX_Y, LEVEL_DEEP), new ColorPoint("#3944bc", CEN_X, CEN_Y, LEVEL_DEEP), new ColorPoint("#051049", MIN_X, MIN_Y, LEVEL_OCEAN), new ColorPoint("#92fefd", MIN_X, MAX_Y, LEVEL_OCEAN), new ColorPoint("#1520a6", MAX_X, MIN_Y, LEVEL_OCEAN), new ColorPoint("#017a72", MAX_X, MAX_Y, LEVEL_OCEAN), new ColorPoint("#2832c2", CEN_X, CEN_Y, LEVEL_OCEAN), new ColorPoint("#5443b0", MIN_X, MIN_Y, LEVEL_COAST), new ColorPoint("#82eefd", MIN_X, MAX_Y, LEVEL_COAST), new ColorPoint("#0492c6", MAX_X, MIN_Y, LEVEL_COAST), new ColorPoint("#52b2bf", MAX_X, MAX_Y, LEVEL_COAST), new ColorPoint("#0492c6", CEN_X, CEN_Y, LEVEL_COAST) };
 
-        Color[][] colors = calculateColor(COLORS, settings, tempMap, humidityMap, heightMap);
+        Color[][] colors = calculateColor(COLORS, tempMap, humidityMap, heightMap);
 
         for (int x = 0; x < colors.length; x++) {
             for (int y = 0; y < colors[x].length; y++) {
-                colors[x][y] = blendColor(colors[x][y], Color.BLACK, 1 - Math.max(Math.min(settings.oceanLevel - (heightMap[x][y] / 1f), 0.5f), 0));
+                colors[x][y] = blendColor(colors[x][y], Color.BLACK, 1 - Math.max(Math.min(oceanLevel - (heightMap[x][y] / 1f), 0.5f), 0));
             }
         }
 
@@ -279,25 +281,25 @@ public class MapGenerator {
     /**
      * Generate the map for the land this first takes the sub maps generates the colors then it generates the shadow and highlight maps to give the surface texture
      * 
-     * @return a 2d Color Array containg the land data
+     * @return a 2d Color Array containing the land data
      */
-    public static Color[][] getLandMap(Settings settings, float[][] tempMap, float[][] humidityMap, float[][] heightMap) {
+    public Color[][] getLandMap(float[][] tempMap, float[][] humidityMap, float[][] heightMap) {
         final ColorPoint[] COLORS = { new ColorPoint("#014421", MIN_X, MIN_Y, LEVEL_LAND), new ColorPoint("#FAD5A5", MAX_X, MIN_Y, LEVEL_LAND), new ColorPoint("#26580f", MAX_X, MAX_Y, LEVEL_LAND), };
 
-        Color[][] colors = calculateColor(COLORS, settings, tempMap, humidityMap, heightMap);
+        Color[][] colors = calculateColor(COLORS, tempMap, humidityMap, heightMap);
         // for(int x = 0; x < colors.length; x++) {
-        //     for(int y = 0; y < colors[0].length; y++) {
-        //         colors[x][y] = blendColor(Color.WHITE, Color.BLACK, heightMap[x][y]);
-        //     }
+        // for(int y = 0; y < colors[0].length; y++) {
+        // colors[x][y] = blendColor(Color.WHITE, Color.BLACK, heightMap[x][y]);
         // }
-        if (settings.shadow) {
-            float[][] shadow = getShadowMap(settings);
-            float[][] highlight = getHighlightMap(settings);
+        // }
+        if (shadow) {
+            float[][] shadow = getShadowMap();
+            float[][] highlight = getHighlightMap();
             for (int x = 0; x < colors.length; x++) {
                 for (int y = 0; y < colors[0].length; y++) {
                     // colors[x][y] = blendColor(Color.WHITE, Color.BLACK, shadow[x][y]);
                     colors[x][y] = blendColor(Color.BLACK, colors[x][y], shadow[x][y]);
-                    colors[x][y] = blendColor(Color.WHITE, colors[x][y], highlight[x][y]);
+                    colors[x][y] = blendColor(Color.WHITE, colors[x][y], mapL(highlight[x][y], 0, 1, 0, 0.15f));
                 }
             }
         }
@@ -305,20 +307,19 @@ public class MapGenerator {
         return colors;
     }
 
-    public static float[][] getHighlightMap(Settings settings) {
+    public float[][] getHighlightMap() {
         int num = 500;
-        int realNum = (int) (num / settings.scale);
-        float[][] heightMap = PerlinMap.generateMap(settings.x, settings.y - realNum, settings.width, settings.height + realNum, settings.renderWidth, settings.renderHeight + num, getKey(settings.seed, 0));
-        float[][] highlightMap = new float[settings.renderWidth][settings.renderHeight];
-
-        for (int x = 0; x < settings.renderWidth; x++) {
-            for (int y = 0; y < settings.renderHeight; y++) {
-                float maxSlope = Float.POSITIVE_INFINITY;
-                for(int t = y + 1; t < settings.renderHeight + num; t++) {
-                    maxSlope = Math.min(maxSlope, -(heightMap[x][y] - heightMap[x][t]) / (y - t));
+        float realNum = (num / scale);
+        float[][] heightMap = PerlinMap.generateMap(x, y, width, height + realNum, renderWidth, renderHeight + num, getKey( 0));
+        // float[][] heightMap = PerlinMap.generateMap(x, y, width, height, renderWidth, renderHeight, getKey(seed, 0));
+        float[][] highlightMap = new float[renderWidth][renderHeight];
+        for (int x = 0; x < renderWidth; x++) {
+            for (int y = 0; y < renderHeight; y++) {
+                float maxSlope = 0;
+                for (int k = 1; k < num; k++) {
+                    maxSlope = Math.max(maxSlope, (heightMap[x][y+k]-heightMap[x][y])*MAP_HEIGHT*scale/(k));
                 }
-                highlightMap[x][y] = Math.min(Math.max(mapL(maxSlope * settings.scale, CAST_MAX, CAST_MIN, MIN_HIGHLIGHT, MAX_HIGHLIGHT), MIN_HIGHLIGHT), MAX_HIGHLIGHT);
-                // shadowMap[x][y - num] = heightMap[x][y];
+                highlightMap[x][y] = (float) Math.max(0, (2 * Math.atan(maxSlope) / Math.PI)-Math.toRadians(SUNLIGHT_ANGLE));
             }
         }
         return highlightMap;
@@ -327,23 +328,24 @@ public class MapGenerator {
     /**
      * Generates a texture map for the land giving the mountains shadow
      * 
-     * @return a 2d float array containg the shadow values
+     * @return a 2d float array containing the shadow values
      */
 
-    public static float[][] getShadowMap(Settings settings) {
+    public static final int SUNLIGHT_ANGLE = 10;
+    public static final int MAP_HEIGHT = 300;
+    public float[][] getShadowMap() {
         int num = 500;
-        int realNum = (int) (num / settings.scale);
-        float[][] heightMap = PerlinMap.generateMap(settings.x, settings.y, settings.width, settings.height + realNum, settings.renderWidth, settings.renderHeight + num, getKey(settings.seed, 0));
-        float[][] shadowMap = new float[settings.renderWidth][settings.renderHeight];
-
-        for (int x = 0; x < settings.renderWidth; x++) {
-            for (int y = num; y < settings.renderHeight + num; y++) {
-                float maxSlope = Float.POSITIVE_INFINITY;
-                for(int t = 0; t < y; t++) {
-                    maxSlope = Math.min(maxSlope, (heightMap[x][y] - heightMap[x][t]) / (y - t));
+        float realNum = (num / scale);
+        float[][] heightMap = PerlinMap.generateMap(x, y, width, height + realNum, renderWidth, renderHeight + num, getKey(0));
+        // float[][] heightMap = PerlinMap.generateMap(x, y, width, height, renderWidth, renderHeight, getKey(seed, 0));
+        float[][] shadowMap = new float[renderWidth][renderHeight];
+        for (int x = 0; x < renderWidth; x++) {
+            for (int y = 0; y < renderHeight; y++) {
+                float maxSlope = 0;
+                for (int k = 1; k < num; k++) {
+                    maxSlope = Math.max(maxSlope, -(heightMap[x][y+k]-heightMap[x][y])*MAP_HEIGHT*scale/(k));
                 }
-                shadowMap[x][y - num] = Math.min(Math.max(mapL(maxSlope * settings.scale, CAST_MAX, CAST_MIN, MIN_SHADOW, MAX_SHADOW), MIN_SHADOW), MAX_SHADOW);
-                // shadowMap[x][y - num] = heightMap[x][y];
+                shadowMap[x][y] = (float) Math.max(0, (2 * Math.atan(maxSlope) / Math.PI)-Math.toRadians(SUNLIGHT_ANGLE));
             }
         }
         return shadowMap;
@@ -364,7 +366,7 @@ public class MapGenerator {
     }
 
     /**
-     * ColorPoint combines the storage of an RGB color anda 3d point this allows data for the ocean and land map to be generated without needing to store multiply arrays containg points and colors
+     * ColorPoint combines the storage of an RGB color and a 3d point this allows data for the ocean and land map to be generated without needing to store multiply arrays contain points and colors
      */
     public static class ColorPoint {
         int r, g, b;
@@ -418,11 +420,11 @@ public class MapGenerator {
      * @param colorPoints the list of colorPoints to interpolate between
      * @return a 2d Color array representing the maped colors
      */
-    public static Color[][] calculateColor(ColorPoint[] colorPoints, Settings settings, float[][] tempMap, float[][] humidityMap, float[][] heightMap) {
-        Color[][] colors = new Color[settings.renderWidth][settings.renderHeight];
+    public Color[][] calculateColor(ColorPoint[] colorPoints, float[][] tempMap, float[][] humidityMap, float[][] heightMap) {
+        Color[][] colors = new Color[renderWidth][renderHeight];
         float dist = distance(0, 0, 0, 1, 1, 1);
-        for (int x = 0; x < settings.renderWidth; x++) {
-            for (int y = 0; y < settings.renderHeight; y++) {
+        for (int x = 0; x < renderWidth; x++) {
+            for (int y = 0; y < renderHeight; y++) {
                 float temp = tempMap[x][y] / 1f;
                 float humidity = humidityMap[x][y] / 1f;
                 float Height = heightMap[x][y] / 1f;
@@ -462,8 +464,8 @@ public class MapGenerator {
      * @param x  value to be mapped
      * @param x1 input value 1
      * @param x2 input value 2
-     * @param y1 output value coresponding to 1
-     * @param y2 output value coresponding to 2
+     * @param y1 output value corresponding to 1
+     * @param y2 output value corresponding to 2
      * @return the output for the given input
      */
     private static float mapL(float x, float x1, float x2, float y1, float y2) {

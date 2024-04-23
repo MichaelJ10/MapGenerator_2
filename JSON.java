@@ -47,7 +47,7 @@ public interface JSON {
                 }
             }
             if (quotes || escape)
-                throw new IllegalArgumentException("Input Incompleat");
+                throw new IllegalArgumentException("Input Incomplete");
             if (str != null)
                 return new JSON.Value.String(str);
             if (bool != null)
@@ -56,8 +56,8 @@ public interface JSON {
                 return new JSON.Value.Float(floatNumber);
             if (integerNumber != null)
                 return new JSON.Value.Integer(integerNumber);
+            return new JSON.Value.Null();
         }
-        return null;
     }
 
     public static String removeWhiteSpace(String str) {
@@ -261,6 +261,12 @@ public interface JSON {
             @Override
             public java.lang.String toJSON() {
                 return "\"" + value + "\"";
+            }
+        }
+    
+        public class Null implements Value {
+            public java.lang.String toJSON() {
+                return "null";
             }
         }
     }

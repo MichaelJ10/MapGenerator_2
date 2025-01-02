@@ -119,6 +119,8 @@ public class MapGenerator {
     static float maxShadow = 0;
     static float minShadow = 0;
 
+    static float HEIGHT_MODIFIER = 0;
+
     // DO NOT ADJUST
     static final float CLIMATE_SEPARATION = 2f, COLOR_BLEND = 1f;
     static final float LEVEL_DEEP = 0.1f, LEVEL_OCEAN = 0.3f, LEVEL_COAST = 0.45f, LEVEL_LAND = 0.7f, LEVEL_MOUNTAIN = 0.9f;
@@ -150,7 +152,7 @@ public class MapGenerator {
             System.out.println(seed);
         }
 
-        float[][] heightMap = getMap(0, 0);
+        float[][] heightMap = getMap(0, HEIGHT_MODIFIER);
         float[][] tempMap = new float[0][0];
         float[][] humidityMap = new float[0][0];
         int[][] topologyStepMap = new int[0][0];
@@ -310,7 +312,7 @@ public class MapGenerator {
     public float[][] getHighlightMap() {
         int num = 500;
         float realNum = (num / scale);
-        float[][] heightMap = PerlinMap.generateMap(x, y, width, height + realNum, renderWidth, renderHeight + num, getKey( 0));
+        float[][] heightMap = PerlinMap.generateMap(x, y, width, height + realNum, renderWidth, renderHeight + num, HEIGHT_MODIFIER, getKey( 0));
         // float[][] heightMap = PerlinMap.generateMap(x, y, width, height, renderWidth, renderHeight, getKey(seed, 0));
         float[][] highlightMap = new float[renderWidth][renderHeight];
         for (int x = 0; x < renderWidth; x++) {
@@ -336,7 +338,7 @@ public class MapGenerator {
     public float[][] getShadowMap() {
         int num = 500;
         float realNum = (num / scale);
-        float[][] heightMap = PerlinMap.generateMap(x, y, width, height + realNum, renderWidth, renderHeight + num, getKey(0));
+        float[][] heightMap = PerlinMap.generateMap(x, y, width, height + realNum, renderWidth, renderHeight + num, HEIGHT_MODIFIER, getKey(0));
         // float[][] heightMap = PerlinMap.generateMap(x, y, width, height, renderWidth, renderHeight, getKey(seed, 0));
         float[][] shadowMap = new float[renderWidth][renderHeight];
         for (int x = 0; x < renderWidth; x++) {
